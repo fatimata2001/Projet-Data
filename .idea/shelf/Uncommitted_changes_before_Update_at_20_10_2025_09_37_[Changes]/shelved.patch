@@ -1,0 +1,19 @@
+Index: requirements.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>pandas\r\nmatplotlib\r\nflask\r\nnumpy\r\nscikit-learn\r\nPyqt5\r\nSeaborn\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-16LE
+===================================================================
+diff --git a/requirements.txt b/requirements.txt
+--- a/requirements.txt	(revision 590f04ad7ab909c9b9479abab35c859af44d48e8)
++++ b/requirements.txt	(date 1760520050579)
+@@ -1,8 +1,6 @@
+ pandas
+ matplotlib
+-flask
+ numpy
+ scikit-learn
+-Pyqt5
+ Seaborn
+ 
