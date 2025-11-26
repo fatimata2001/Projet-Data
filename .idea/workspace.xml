@@ -5,15 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="0819e58a-b536-4d36-879b-ba8e619ba6da" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/Projet-Data.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app_portefeuille/templates/app_portefeuille/simulation.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/simulation.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/static/simulation.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Projet-Data.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Projet-Data.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_20_10_2025_09_37_[Changes]1/shelved.patch" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_20_10_2025_09_37__Changes_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_portefeuille/templates/app_portefeuille/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app_portefeuille/templates/app_portefeuille/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_portefeuille/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_portefeuille/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app_portefeuille/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/app_portefeuille/views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/config/settings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app_portefeuille/templates/app_portefeuille/simulation.html" beforeDir="false" afterPath="$PROJECT_DIR$/app_portefeuille/templates/app_portefeuille/simulation.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/simulation.css" beforeDir="false" afterPath="$PROJECT_DIR$/static/simulation.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/simulation.js" beforeDir="false" afterPath="$PROJECT_DIR$/static/simulation.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +77,6 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-PY-252.26830.99" />
         <option value="bundled-python-sdk-164cda30dcd9-0af03a5fa574-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26830.99" />
       </set>
     </attachedChunks>
@@ -94,7 +92,8 @@
       <workItem from="1760514095059" duration="4707000" />
       <workItem from="1760518922404" duration="3143000" />
       <workItem from="1760871045028" duration="66000" />
-      <workItem from="1760944450271" duration="7907000" />
+      <workItem from="1760944450271" duration="8104000" />
+      <workItem from="1763998938247" duration="9000" />
     </task>
     <servers />
   </component>

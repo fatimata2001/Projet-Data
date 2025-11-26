@@ -1,131 +1,179 @@
-// Helpers
+// simulation.js - Version intégrée avec les modèles Django
+
+// Helpers pour le formatage
 const € = n => n.toLocaleString("fr-FR", {style:"currency", currency:"EUR", maximumFractionDigits:0});
 const pct = x => (x*100).toFixed(2) + "%";
 
-const ETF = {
-  EUNL: { exp: 0.07, vol: 0.15 },
-  CW8: { exp: 0.068, vol: 0.15 },
-  "PEA-WLD": { exp: 0.065, vol: 0.16 },
-  EM: { exp: 0.09, vol: 0.22 },
-  BONDS: { exp: 0.03, vol: 0.07 },
-};
-const FREQ = { monthly:12, quarterly:4, semiannual:2, annual:1 };
-
 let growthChart, returnsChart;
 
-function simulate(params){
-  const {initial, recurring, years, feePct, freq, etf, begin} = params;
-  const periods = years * FREQ[freq];
-  const r_a = ETF[etf].exp;
-  const r_p = Math.pow(1+r_a, 1/FREQ[freq]) - 1;
-  const fee_p = Math.pow(1+feePct, 1/FREQ[freq]) - 1;
-
-  let value = initial;
-  let contrib = 0;
-  const points = [value];
-  const returns = [];
-
-  for(let i=1;i<=periods;i++){
-    if(begin){ value += recurring; contrib += recurring; }
-    const gross = value * (1+r_p);
-    const fees  = gross * fee_p;
-    const newVal = gross - fees;
-    returns.push((newVal - value)/value);
-    value = newVal;
-    if(!begin){ value += recurring; contrib += recurring; }
-    // sample yearly for nicer x-axis
-    if(i % FREQ[freq] === 0) points.push(value);
-  }
-
-  // Lump sum: tout investi dès le début (initial + contrib total)
-  let lump = initial + contrib;
-  const yearsLabels = Array.from({length: years+1}, (_,i)=>i);
-  const lumpPts = [lump];
-  for(let y=1;y<=years;y++){ lump *= (1+r_a); lumpPts.push(lump); }
-
-  const invested = initial + contrib;
-  const finalValue = value;
-  const yearsElapsed = years || 1;
-  const cagr = Math.pow(finalValue / (invested || 1), 1/yearsElapsed) - 1;
-
-  // annualized vol + sharpe (approx)
-  const perAvg = returns.reduce((a,b)=>a+b,0) / (returns.length||1);
-  const perVar = returns.reduce((a,r)=>a + Math.pow(r - perAvg, 2), 0) / (returns.length||1);
-  const vol = Math.sqrt(perVar) * Math.sqrt(FREQ[freq]);
-  const riskFree = 0.02;
-  const sharpe = vol>0 ? ((perAvg*FREQ[freq]) - riskFree)/vol : 0;
-
-  return {yearsLabels, points, lumpPts, invested, finalValue, cagr, sharpe, vol};
-}
-
-function renderCharts(data){
-  const {yearsLabels, points, lumpPts, cagr} = data;
-
-  // Growth
-  const ctx1 = document.getElementById("chartGrowth");
-  growthChart && growthChart.destroy();
-  growthChart = new Chart(ctx1, {
-    type: "line",
-    data: {
-      labels: yearsLabels,
-      datasets: [
-        { label:"DCA", data: points, fill:false, borderWidth:2 },
-        { label:"Lump Sum", data: lumpPts, fill:false, borderWidth:2 }
-      ]
-    },
-    options: { responsive:true, plugins:{legend:{position:"bottom"}} }
-  });
-
-  // Returns (simple mock from points)
-  const rets = [];
-  for(let i=1;i<points.length;i++){
-    rets.push( (points[i]-points[i-1]) / points[i-1] );
-  }
-  const ctx2 = document.getElementById("chartReturns");
-  returnsChart && returnsChart.destroy();
-  returnsChart = new Chart(ctx2, {
-    type: "bar",
-    data: { labels: yearsLabels.slice(1), datasets:[{label:"Rendement", data: rets}] },
-    options: { responsive:true, plugins:{legend:{display:false}}, scales:{y:{ticks:{ callback: v => (v*100).toFixed(0) + '%' }}} }
-  });
-}
-
-function updateTiles(data){
-  document.getElementById("tInvested").textContent = €(Math.round(data.invested));
-  document.getElementById("tFinal").textContent    = €(Math.round(data.finalValue));
-  document.getElementById("tCAGR").textContent     = pct(data.cagr);
-  document.getElementById("tSharpe").textContent   = data.sharpe.toFixed(2);
-}
-
-function getParams(){
-  const f = document.getElementById("formParams");
-  return {
-    initial:  Number(f.initial.value || 0),
-    recurring:Number(f.recurring.value || 0),
-    years:    Number(f.years.value || 1),
-    feePct:   Number(f.feePct.value || 0)/100,
-    freq:     f.freq.value,
-    etf:      f.etf.value,
-    begin:    document.getElementById("dcaBegin").checked
-  };
-}
-
-function run(){
-  const data = simulate(getParams());
-  renderCharts(data);
-  updateTiles(data);
-}
-
-document.getElementById("formParams").addEventListener("submit", (e)=>{
-  e.preventDefault();
-  run();
+// Initialisation - Charge les actifs depuis la base Django
+document.addEventListener('DOMContentLoaded', function() {
+    chargerActifsDepuisDjango();
 });
-document.getElementById("dcaBegin").addEventListener("change", run);
 
-// première exécution
-run();
+// Charge les actifs depuis l'API Django
+async function chargerActifsDepuisDjango() {
+    try {
+        const response = await fetch('/api/actifs/');  // Votre binôme créera cette API
+        const actifs = await response.json();
+        peuplerSelectActifs(actifs);
+    } catch (error) {
+        console.log('En attente de l\'API actifs...');
+        // En attendant, select vide
+        document.getElementById('selectActif').innerHTML = '<option value="">Chargement des actifs...</option>';
+    }
+}
 
-// 👉 Pour brancher au backend (exemple) :
-// fetch('/api/simulate/', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(getParams())})
-//   .then(r=>r.json())
-//   .then(dataFromAPI => { /* remplacer simulate() et renderCharts() par les données reçues */ });
+// Peuple le select avec les actifs de la base
+function peuplerSelectActifs(actifs) {
+    const select = document.getElementById('selectActif');
+    select.innerHTML = '<option value="">Sélectionnez un actif</option>';
+
+    actifs.forEach(actif => {
+        const option = document.createElement('option');
+        option.value = actif.id;
+        option.textContent = `${actif.nom} (${actif.symbole}) - ${actif.type_actif}`;
+        select.appendChild(option);
+    });
+}
+
+// Simulation via l'API Django de votre binôme
+async function lancerSimulation() {
+    const params = getParams();
+
+    try {
+        // Appel à l'API de simulation de votre binôme
+        const response = await fetch('/api/simuler/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(params)
+        });
+
+        const resultats = await response.json();
+
+        // Affichage des résultats
+        renderCharts(resultats);
+        updateTiles(resultats);
+
+    } catch (error) {
+        console.log('API simulation non disponible encore');
+    }
+}
+
+// Fonctions d'affichage pour les données de votre binôme
+function renderCharts(data) {
+    // data doit contenir: yearsLabels, points, lumpPts
+    const { yearsLabels, points, lumpPts } = data;
+
+    // Graphique de croissance
+    const ctx1 = document.getElementById("chartGrowth");
+    if (growthChart) growthChart.destroy();
+
+    growthChart = new Chart(ctx1, {
+        type: "line",
+        data: {
+            labels: yearsLabels,
+            datasets: [
+                {
+                    label: "DCA",
+                    data: points,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                },
+                {
+                    label: "Lump Sum",
+                    data: lumpPts,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: "bottom" }
+            }
+        }
+    });
+
+    // Graphique des rendements (si fourni par le backend)
+    if (data.rendements) {
+        const ctx2 = document.getElementById("chartReturns");
+        if (returnsChart) returnsChart.destroy();
+
+        returnsChart = new Chart(ctx2, {
+            type: "bar",
+            data: {
+                labels: data.labelsRendements || yearsLabels.slice(1),
+                datasets: [{
+                    label: "Rendement annuel",
+                    data: data.rendements,
+                    backgroundColor: data.rendements.map(r => r >= 0 ? 'rgba(16, 185, 129, 0.7)' : 'rgba(239, 68, 68, 0.7)'),
+                    borderColor: data.rendements.map(r => r >= 0 ? '#10b981' : '#ef4444'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
+}
+
+function updateTiles(data) {
+    // data doit contenir: invested, finalValue, cagr, sharpe
+    document.getElementById("tInvested").textContent = €(data.invested);
+    document.getElementById("tFinal").textContent = €(data.finalValue);
+    document.getElementById("tCAGR").textContent = pct(data.cagr);
+    document.getElementById("tSharpe").textContent = data.sharpe.toFixed(2);
+}
+
+// Récupère les paramètres du formulaire
+function getParams() {
+    const f = document.getElementById("formParams");
+    return {
+        initial: Number(f.initial.value || 0),
+        recurring: Number(f.recurring.value || 0),
+        years: Number(f.years.value || 1),
+        feePct: Number(f.feePct.value || 0) / 100,
+        freq: f.freq.value,
+        actif_id: f.actif.value,  // ID de l'actif Django
+        begin: document.getElementById("dcaBegin").checked,
+        from_year: document.getElementById("fromYear").value,
+        to_year: document.getElementById("toYear").value,
+        currency: document.querySelector('input[name="currency"]:checked').value,
+        tx_fee: document.getElementById("txFee").value,
+        mgmt_fee: document.getElementById("mgmtFee").value
+    };
+}
+
+// Helper pour le token CSRF
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
+// Événements
+document.getElementById("formParams").addEventListener("submit", (e) => {
+    e.preventDefault();
+    lancerSimulation();
+});
+
+document.getElementById("dcaBegin").addEventListener("change", lancerSimulation);
+
+// Export pour votre binôme
+window.simulationApp = {
+    lancerSimulation,
+    getParams,
+    renderCharts,
+    updateTiles
+};
